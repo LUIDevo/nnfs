@@ -67,9 +67,18 @@ dense1 = Layer_Dense(2, 3)
 activation1 = Activation_ReLU()
 dense2 = Layer_Dense(3, 3)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
-lr = 1
+lr = 0.1
+lr_decay=0.01
+lr_growth=0.01
+max_lr=2
+warmup_steps=1000
+warmdown_steps=9000
 
 for iteration in range(10000):
+    if iteration<warmup_steps:
+        lr=min(lr+lr_growth*lr, max_lr)
+    if iteration>warmdown_steps:
+        lr=max(lr-lr_decay*lr,0)
     # forward
     dense1.forward(X)
     activation1.forward(dense1.output)
