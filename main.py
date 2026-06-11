@@ -3,6 +3,31 @@ import nnfs
 from nnfs.datasets import vertical_data
 nnfs.init()
 
+class Optimizer_SGD:
+    def __init__(self, lr=0.01, momentum=0.9, max_lr=0.1, warmup_steps=1000, warmdown_steps=9000, lr_growth=0.001, lr_decay=0.01):
+        self.lr = lr
+        self.current_lr = lr
+        self.momentum = momentum
+        self.max_lr = max_lr
+        self.warmup_steps = warmup_steps
+        self.warmdown_steps = warmdown_steps
+        self.lr_growth = lr_growth
+        self.lr_decay = lr_decay
+        self.iterations = 0
+    def pre_update(self):
+        if self.iterations < self.warmup_steps:
+            self.current_lr = min(self.current_lr + self.lr_growth * self.current_lr, self.max_lr)
+        elif self.iterations > self.warmdown_steps:
+            self.current_lr = max(self.current_lr - self.lr_decay * self.current_lr, 0)
+    def update_params(self, layer):
+        layer.v_weights = self.momentum * layer.v_weights - self.current_lr * layer.dweights
+        layer.v_biases  = self.momentum * layer.v_biases  - self.current_lr * layer.dbiases
+        layer.weights += layer.v_weights
+        layer.biases  += layer.v_biases
+    def post_update(self):
+        self.iterations += 1
+
+
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons):
         self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
@@ -69,18 +94,10 @@ dense1 = Layer_Dense(2, 3)
 activation1 = Activation_ReLU()
 dense2 = Layer_Dense(3, 3)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
-lr = 0.01
-lr_decay=0.01
-lr_growth=0.001
-max_lr=0.1
-warmup_steps=1000
-warmdown_steps=9000
+optimizer = Optimizer_SGD(lr=0.01, momentum=0.9)
 
 for iteration in range(10001):
-    if iteration<warmup_steps:
-        lr=min(lr+lr_growth*lr, max_lr)
-    if iteration>warmdown_steps:
-        lr=max(lr-lr_decay*lr,0)
+    optimizer.pre_update()
     # forward
     dense1.forward(X)
     activation1.forward(dense1.output)
@@ -99,11 +116,6 @@ for iteration in range(10001):
     activation1.backward(dense2.dinputs)
     dense1.backward(activation1.dinputs)
     # gradient descent update
-    dense1.v_weights=0.9*dense1.v_weights-lr*dense1.dweights
-    dense1.weights += dense1.v_weights
-    dense1.v_biases=0.9*dense1.v_biases-lr*dense1.dbiases
-    dense1.biases += dense1.v_biases
-    dense2.v_weights=0.9*dense2.v_weights-lr*dense2.dweights
-    dense2.weights += dense2.v_weights
-    dense2.v_biases=0.9*dense2.v_biases-lr*dense2.dbiases
-    dense2.biases += dense2.v_biases
+    optimizer.update_params(dense1)
+    optimizer.update_params(dense2)
+    optimizer.post_update()
