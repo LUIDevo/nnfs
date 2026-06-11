@@ -7,6 +7,8 @@ class Layer_Dense:
     def __init__(self, n_inputs, n_neurons):
         self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
         self.biases = np.zeros((1, n_neurons))
+        self.v_weights = np.zeros_like(self.weights)
+        self.v_biases = np.zeros_like(self.biases)
     def forward(self, inputs):
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
@@ -67,14 +69,14 @@ dense1 = Layer_Dense(2, 3)
 activation1 = Activation_ReLU()
 dense2 = Layer_Dense(3, 3)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
-lr = 0.1
+lr = 0.01
 lr_decay=0.01
-lr_growth=0.01
-max_lr=2
+lr_growth=0.001
+max_lr=0.1
 warmup_steps=1000
 warmdown_steps=9000
 
-for iteration in range(10000):
+for iteration in range(10001):
     if iteration<warmup_steps:
         lr=min(lr+lr_growth*lr, max_lr)
     if iteration>warmdown_steps:
@@ -96,9 +98,12 @@ for iteration in range(10000):
     dense2.backward(loss_activation.dinputs)
     activation1.backward(dense2.dinputs)
     dense1.backward(activation1.dinputs)
-
     # gradient descent update
-    dense1.weights += -lr * dense1.dweights
-    dense1.biases  += -lr * dense1.dbiases
-    dense2.weights += -lr * dense2.dweights
-    dense2.biases  += -lr * dense2.dbiases
+    dense1.v_weights=0.9*dense1.v_weights-lr*dense1.dweights
+    dense1.weights += dense1.v_weights
+    dense1.v_biases=0.9*dense1.v_biases-lr*dense1.dbiases
+    dense1.biases += dense1.v_biases
+    dense2.v_weights=0.9*dense2.v_weights-lr*dense2.dweights
+    dense2.weights += dense2.v_weights
+    dense2.v_biases=0.9*dense2.v_biases-lr*dense2.dbiases
+    dense2.biases += dense2.v_biases
