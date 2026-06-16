@@ -27,7 +27,6 @@ class Optimizer_SGD:
     def post_update(self):
         self.iterations += 1
 
-
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons):
         self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
@@ -89,9 +88,9 @@ class Activation_Softmax_Loss_CategoricalCrossentropy:
         self.dinputs[range(samples), y_true] -= 1
         self.dinputs = self.dinputs / samples
 
-X, y = vertical_data(samples=100, classes=3)
-dense1 = Layer_Dense(2, 3)
-activation1 = Activation_ReLU()
+X, y = vertical_data(samples=100, classes=3) # X takes coord data (a,b) and y becomes class
+dense1 = Layer_Dense(2, 3) # creates a layer of 2 inputs and 3 neurons
+activation1 = Activation_ReLU() # forward applies relu
 dense2 = Layer_Dense(3, 3)
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
 optimizer = Optimizer_SGD(lr=0.01, momentum=0.9)
