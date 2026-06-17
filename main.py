@@ -80,7 +80,7 @@ class Activation_Softmax_Loss_CategoricalCrossentropy:
     def forward(self, inputs, y_true):
         self.activation.forward(inputs)
         self.output = self.activation.output
-        return self.loss.calculate(self.output, y_true)
+        return self.loss.calculate(self.output, y_true) # goes backward to Loss.calculate
     def backward(self, dvalues, y_true):
         samples = len(dvalues)
         if len(y_true.shape) == 2:
@@ -91,21 +91,21 @@ class Activation_Softmax_Loss_CategoricalCrossentropy:
 
 X, y = vertical_data(samples=100, classes=3) # X takes coord data (a,b) and y becomes class
 dense1 = Layer_Dense(2, 3) # creates a layer of 2 inputs and 3 neurons
-activation1 = Activation_ReLU() # forward applies relu, also applies relu?
+activation1 = Activation_ReLU() # forward applies relu, backward also applies relu?
 dense2 = Layer_Dense(3, 3) # creates a layer of 3 inputs and 3 neurons
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy() # sets up activation function, and loss function
-optimizer = Optimizer_SGD(lr=0.01, momentum=0.9) # sets up optimizer
+optimizer = Optimizer_SGD(lr=0.01, momentum=0.9) # sets up optimizer | what is role of optimimizer? Is it an abstraction of some sort?
 
 for iteration in range(10001):
     optimizer.pre_update() # changes learning rate dependant on iteration count (warmup/warmdown)
     # forward
-    dense1.forward(X)
-    activation1.forward(dense1.output)
-    dense2.forward(activation1.output)
-    loss = loss_activation.forward(dense2.output, y)
+    dense1.forward(X) # multiplying inputs and weights and adding biases to self.output, the entirety of X everytime
+    activation1.forward(dense1.output) # applies relu
+    dense2.forward(activation1.output) # applies forward activation to dense 2
+    loss = loss_activation.forward(dense2.output, y) # Softmax categorical loss -> Activation_softmax forward ->
 
-    predictions = np.argmax(loss_activation.output, axis=1)
-    accuracy = np.mean(predictions == y)
+    predictions = np.argmax(loss_activation.output, axis=1) # collapses 300x3 array matrix into vector of class predictions
+    accuracy = np.mean(predictions == y) # finds the average of correct vs incorrect, based on how many prediction classes equal the real class
 
     if not iteration % 1000:
         print(f'iteration: {iteration}, loss: {loss:.4f}, acc: {accuracy:.3f}')
