@@ -42,6 +42,7 @@ class Layer_Dense:
         self.dinputs = np.dot(dvalues, self.weights.T)
 
 class Activation_ReLU:
+    # class contains inputs, outputs, dinputs
     def forward(self, inputs):
         self.inputs = inputs
         self.output = np.maximum(0, inputs)
@@ -90,13 +91,13 @@ class Activation_Softmax_Loss_CategoricalCrossentropy:
 
 X, y = vertical_data(samples=100, classes=3) # X takes coord data (a,b) and y becomes class
 dense1 = Layer_Dense(2, 3) # creates a layer of 2 inputs and 3 neurons
-activation1 = Activation_ReLU() # forward applies relu
-dense2 = Layer_Dense(3, 3)
-loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy()
-optimizer = Optimizer_SGD(lr=0.01, momentum=0.9)
+activation1 = Activation_ReLU() # forward applies relu, also applies relu?
+dense2 = Layer_Dense(3, 3) # creates a layer of 3 inputs and 3 neurons
+loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy() # sets up activation function, and loss function
+optimizer = Optimizer_SGD(lr=0.01, momentum=0.9) # sets up optimizer
 
 for iteration in range(10001):
-    optimizer.pre_update()
+    optimizer.pre_update() # changes learning rate dependant on iteration count (warmup/warmdown)
     # forward
     dense1.forward(X)
     activation1.forward(dense1.output)
