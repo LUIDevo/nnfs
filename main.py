@@ -29,10 +29,10 @@ class Optimizer_SGD:
 
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons):
-        self.weights = 0.01 * np.random.randn(n_inputs, n_neurons)
-        self.biases = np.zeros((1, n_neurons))
-        self.v_weights = np.zeros_like(self.weights)
-        self.v_biases = np.zeros_like(self.biases)
+        self.weights = 0.01 * np.random.randn(n_inputs, n_neurons) # Creates a shape of n_inputs x n_neurons of numbers of the normal distribution, can be negative
+        self.biases = np.zeros((1, n_neurons)) # creates an array of len n_neurons of 0's. Why not random nums as well?
+        self.v_weights = np.zeros_like(self.weights) # 0's for velocity (because initially they dont change)
+        self.v_biases = np.zeros_like(self.biases) # same thing
     def forward(self, inputs):
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
@@ -54,7 +54,7 @@ class Activation_Softmax:
     def forward(self, inputs):
         exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
-        self.output = probabilities
+        self.output = probabilities # turns the inputs into rows summing to 1, 100 times.
 
 class Loss:
     def calculate(self, output, y):
@@ -64,13 +64,13 @@ class Loss:
 
 class Loss_CategoricalCrossentropy(Loss):
     def forward(self, y_pred, y_true):
-        samples = len(y_pred)
-        y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7)
-        if len(y_true.shape) == 1:
-            correct_confidences = y_pred_clipped[range(samples), y_true]
+        samples = len(y_pred) # prediction length
+        y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7) # we clip values to an extremely small value or close to 1 (presumably to remove 0's) to prevent 0 becoming infinity in the log step
+        if len(y_true.shape) == 1: # why do we differentaite between shapes? When would it be 2, and why do we only have 2 if statements? Are there other shapes that can happen?
+            correct_confidences = y_pred_clipped[range(samples), y_true] # we set correct_confidences to items of y_pre_clipped to a range? between the size of samples to not overflow and y_true? Really not sure what that means
         elif len(y_true.shape) == 2:
-            correct_confidences = np.sum(y_pred_clipped * y_true, axis=1)
-        negative_log_likelihoods = -np.log(correct_confidences)
+            correct_confidences = np.sum(y_pred_clipped * y_true, axis=1) # we multiple y_pred_clipped and y_true, then sum them? Im not sure what this accomplishes
+        negative_log_likelihoods = -np.log(correct_confidences) # then this becomes the loss. We do this to make sure a high confidence is a small loss, and a low confidence becomes a very high loss
         return negative_log_likelihoods
 
 class Activation_Softmax_Loss_CategoricalCrossentropy:
