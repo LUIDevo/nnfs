@@ -59,7 +59,7 @@ class Activation_Softmax:
 class Loss:
     def calculate(self, output, y):
         sample_losses = self.forward(output, y)
-        data_loss = np.mean(sample_losses)
+        data_loss = np.mean(sample_losses) # takes the mean of all losses
         return data_loss
 
 class Loss_CategoricalCrossentropy(Loss):
@@ -82,10 +82,10 @@ class Activation_Softmax_Loss_CategoricalCrossentropy:
         self.output = self.activation.output
         return self.loss.calculate(self.output, y_true) # goes backward to Loss.calculate
     def backward(self, dvalues, y_true):
-        samples = len(dvalues)
-        if len(y_true.shape) == 2:
-            y_true = np.argmax(y_true, axis=1)
-        self.dinputs = dvalues.copy()
+        samples = len(dvalues) # the length of the previous output run
+        if len(y_true.shape) == 2: 
+            y_true = np.argmax(y_true, axis=1) # compressing the shape from a matrix into a singular array
+        self.dinputs = dvalues.copy() # doesnt d stand for derivative? Why would dinputs become the prior outputs of softmax
         self.dinputs[range(samples), y_true] -= 1
         self.dinputs = self.dinputs / samples
 
@@ -102,16 +102,16 @@ for iteration in range(10001):
     dense1.forward(X) # multiplying inputs and weights and adding biases to self.output, the entirety of X everytime
     activation1.forward(dense1.output) # applies relu
     dense2.forward(activation1.output) # applies forward activation to dense 2
-    loss = loss_activation.forward(dense2.output, y) # Softmax categorical loss -> Activation_softmax forward ->
+    loss = loss_activation.forward(dense2.output, y) # Softmax categorical loss -> loss categorical entropy forward -> loss
 
     predictions = np.argmax(loss_activation.output, axis=1) # collapses 300x3 array matrix into vector of class predictions
     accuracy = np.mean(predictions == y) # finds the average of correct vs incorrect, based on how many prediction classes equal the real class
 
-    if not iteration % 1000:
+    if not iteration % 1000: # cool trick where python takes 0 as false, so when iteration is divisible by 1000, the mod returns 0 which becomes true due to the not inversion
         print(f'iteration: {iteration}, loss: {loss:.4f}, acc: {accuracy:.3f}')
 
     # backward
-    loss_activation.backward(loss_activation.output, y)
+    loss_activation.backward(loss_activation.output, y) # 
     dense2.backward(loss_activation.dinputs)
     activation1.backward(dense2.dinputs)
     dense1.backward(activation1.dinputs)
@@ -119,3 +119,6 @@ for iteration in range(10001):
     optimizer.update_params(dense1)
     optimizer.update_params(dense2)
     optimizer.post_update()
+
+# Can we set the layers to an arbitrary amount? Like can we have a 100 nodes on layer 1 and 3 on layer two? 
+# Ok I get why y_true can take both shapes, but whats the point of doing that? Do we not know the shape of y_true? Why would it keep shifting types? Like I feel like something like y_true should just have one standard form. If y_true takes different forms, whats the reason for why that happens?
