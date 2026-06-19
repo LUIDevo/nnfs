@@ -30,7 +30,7 @@ class Optimizer_SGD:
 class Layer_Dense:
     def __init__(self, n_inputs, n_neurons):
         self.weights = 0.01 * np.random.randn(n_inputs, n_neurons) # Creates a shape of n_inputs x n_neurons of numbers of the normal distribution, can be negative
-        self.biases = np.zeros((1, n_neurons)) # creates an array of len n_neurons of 0's. Why not random nums as well?
+        self.biases = np.zeros((1, n_neurons)) # creates an array of len n_neurons of 0's. Not random because no gains to be made by randomisation
         self.v_weights = np.zeros_like(self.weights) # 0's for velocity (because initially they dont change)
         self.v_biases = np.zeros_like(self.biases) # same thing
     def forward(self, inputs):
@@ -48,13 +48,13 @@ class Activation_ReLU:
         self.output = np.maximum(0, inputs)
     def backward(self, dvalues):
         self.dinputs = dvalues.copy()
-        self.dinputs[self.inputs <= 0] = 0
+        self.dinputs[self.inputs <= 0] = 0 # adjusts dinputs based on whether inputs is less than 0 still need to visualise this better
 
 class Activation_Softmax:
     def forward(self, inputs):
-        exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
-        probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
-        self.output = probabilities # turns the inputs into rows summing to 1, 100 times.
+        exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True)) # sets e^num that is max 0, so it becomes a set between 0 and 1
+        probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True) # dividing exp values by the sum of values
+        self.output = probabilities # turns the inputs into rows summing to 1, 300 times.
 
 class Loss:
     def calculate(self, output, y):
@@ -66,7 +66,7 @@ class Loss_CategoricalCrossentropy(Loss):
     def forward(self, y_pred, y_true):
         samples = len(y_pred) # prediction length
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7) # we clip values to an extremely small value or close to 1 (presumably to remove 0's) to prevent 0 becoming infinity in the log step
-        if len(y_true.shape) == 1: # why do we differentaite between shapes? When would it be 2, and why do we only have 2 if statements? Are there other shapes that can happen?
+        if len(y_true.shape) == 1: # if statements are useless, we only need 1 but it is library code which could be used for other projects
             correct_confidences = y_pred_clipped[range(samples), y_true] # we set correct_confidences to items of y_pre_clipped to a range? between the size of samples to not overflow and y_true? Really not sure what that means
         elif len(y_true.shape) == 2:
             correct_confidences = np.sum(y_pred_clipped * y_true, axis=1) # we multiple y_pred_clipped and y_true, then sum them? Im not sure what this accomplishes
@@ -119,6 +119,3 @@ for iteration in range(10001):
     optimizer.update_params(dense1)
     optimizer.update_params(dense2)
     optimizer.post_update()
-
-# Can we set the layers to an arbitrary amount? Like can we have a 100 nodes on layer 1 and 3 on layer two? 
-# Ok I get why y_true can take both shapes, but whats the point of doing that? Do we not know the shape of y_true? Why would it keep shifting types? Like I feel like something like y_true should just have one standard form. If y_true takes different forms, whats the reason for why that happens?
