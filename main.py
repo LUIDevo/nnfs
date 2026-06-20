@@ -4,7 +4,7 @@ from nnfs.datasets import vertical_data
 nnfs.init()
 
 class Optimizer_SGD:
-    def __init__(self, lr=0.01, momentum=0.9, max_lr=0.1, warmup_steps=1000, warmdown_steps=9000, lr_growth=0.001, lr_decay=0.01):
+    def __init__(self, lr=0.01, momentum=0.9, max_lr=0.1, warmup_steps=1000, warmdown_steps=9000, lr_growth=0.001, lr_decay=0.01): # self explanatory
         self.lr = lr
         self.current_lr = lr
         self.momentum = momentum
@@ -14,7 +14,7 @@ class Optimizer_SGD:
         self.lr_growth = lr_growth
         self.lr_decay = lr_decay
         self.iterations = 0
-    def pre_update(self):
+    def pre_update(self): # also self explanatory
         if self.iterations < self.warmup_steps:
             self.current_lr = min(self.current_lr + self.lr_growth * self.current_lr, self.max_lr)
         elif self.iterations > self.warmdown_steps:
@@ -38,8 +38,8 @@ class Layer_Dense:
         self.output = np.dot(inputs, self.weights) + self.biases
     def backward(self, dvalues):
         self.dweights = np.dot(self.inputs.T, dvalues) # prior dinputs get dotted by transpose of input
-        self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
-        self.dinputs = np.dot(dvalues, self.weights.T)
+        self.dbiases = np.sum(dvalues, axis=0, keepdims=True) # dbiases becomes prior input 
+        self.dinputs = np.dot(dvalues, self.weights.T) # we multiply the weights and prior input
 
 class Activation_ReLU:
     # class contains inputs, outputs, dinputs
@@ -112,10 +112,21 @@ for iteration in range(10001):
 
     # backward
     loss_activation.backward(loss_activation.output, y) # sets dinputs to new distribution
-    dense2.backward(loss_activation.dinputs) # 
-    activation1.backward(dense2.dinputs)
+    dense2.backward(loss_activation.dinputs) # sets dinputs from current weights and loss activation backward pass
+    activation1.backward(dense2.dinputs) # 
     dense1.backward(activation1.dinputs)
     # gradient descent update
     optimizer.update_params(dense1)
     optimizer.update_params(dense2)
     optimizer.post_update()
+
+
+# Program sequence
+# Initialise 3 neurons (output features) with 2 input features
+# Initialise Relu function
+# Initialise 3 neurons (output features )with 3 input features
+# Create Loss activation function
+# Create optimizer
+
+# loop 1001 times
+# 
