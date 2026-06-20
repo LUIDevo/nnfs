@@ -37,7 +37,7 @@ class Layer_Dense:
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
     def backward(self, dvalues):
-        self.dweights = np.dot(self.inputs.T, dvalues)
+        self.dweights = np.dot(self.inputs.T, dvalues) # prior dinputs get dotted by transpose of input
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
         self.dinputs = np.dot(dvalues, self.weights.T)
 
@@ -67,9 +67,9 @@ class Loss_CategoricalCrossentropy(Loss):
         samples = len(y_pred) # prediction length
         y_pred_clipped = np.clip(y_pred, 1e-7, 1 - 1e-7) # we clip values to an extremely small value or close to 1 (presumably to remove 0's) to prevent 0 becoming infinity in the log step
         if len(y_true.shape) == 1: # if statements are useless, we only need 1 but it is library code which could be used for other projects
-            correct_confidences = y_pred_clipped[range(samples), y_true] # we set correct_confidences to items of y_pre_clipped to a range? between the size of samples to not overflow and y_true? Really not sure what that means
+            correct_confidences = y_pred_clipped[range(samples), y_true] # takes the correct classes prediction confidence 
         elif len(y_true.shape) == 2:
-            correct_confidences = np.sum(y_pred_clipped * y_true, axis=1) # we multiple y_pred_clipped and y_true, then sum them? Im not sure what this accomplishes
+            correct_confidences = np.sum(y_pred_clipped * y_true, axis=1) # we get rid of the non correct confidences by multiplying with y_true, then sum it to get the correct confidence
         negative_log_likelihoods = -np.log(correct_confidences) # then this becomes the loss. We do this to make sure a high confidence is a small loss, and a low confidence becomes a very high loss
         return negative_log_likelihoods
 
@@ -85,16 +85,16 @@ class Activation_Softmax_Loss_CategoricalCrossentropy:
         samples = len(dvalues) # the length of the previous output run
         if len(y_true.shape) == 2: 
             y_true = np.argmax(y_true, axis=1) # compressing the shape from a matrix into a singular array
-        self.dinputs = dvalues.copy() # doesnt d stand for derivative? Why would dinputs become the prior outputs of softmax
-        self.dinputs[range(samples), y_true] -= 1
-        self.dinputs = self.dinputs / samples
+        self.dinputs = dvalues.copy() # we set the dvalues to the prior softmax output
+        self.dinputs[range(samples), y_true] -= 1 # subtracts 1 from the prior largest softmax output (so only the largest output becomes negative)
+        self.dinputs = self.dinputs / samples # after subtracting 1, divide by the length of softmax
 
 X, y = vertical_data(samples=100, classes=3) # X takes coord data (a,b) and y becomes class
 dense1 = Layer_Dense(2, 3) # creates a layer of 2 inputs and 3 neurons
-activation1 = Activation_ReLU() # forward applies relu, backward also applies relu?
+activation1 = Activation_ReLU() # Relu function
 dense2 = Layer_Dense(3, 3) # creates a layer of 3 inputs and 3 neurons
 loss_activation = Activation_Softmax_Loss_CategoricalCrossentropy() # sets up activation function, and loss function
-optimizer = Optimizer_SGD(lr=0.01, momentum=0.9) # sets up optimizer | what is role of optimimizer? Is it an abstraction of some sort?
+optimizer = Optimizer_SGD(lr=0.01, momentum=0.9) # The optimizer abstracts the logic of updating params and lr rate
 
 for iteration in range(10001):
     optimizer.pre_update() # changes learning rate dependant on iteration count (warmup/warmdown)
@@ -111,8 +111,8 @@ for iteration in range(10001):
         print(f'iteration: {iteration}, loss: {loss:.4f}, acc: {accuracy:.3f}')
 
     # backward
-    loss_activation.backward(loss_activation.output, y) # 
-    dense2.backward(loss_activation.dinputs)
+    loss_activation.backward(loss_activation.output, y) # sets dinputs to new distribution
+    dense2.backward(loss_activation.dinputs) # 
     activation1.backward(dense2.dinputs)
     dense1.backward(activation1.dinputs)
     # gradient descent update
