@@ -129,4 +129,9 @@ for iteration in range(10001):
 # Create optimizer
 
 # loop 1001 times
-# 
+# set lr rate in pre update
+# forward pass
+# loss calculation
+# finds prediction
+# backward 
+# update weights
