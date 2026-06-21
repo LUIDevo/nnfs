@@ -113,7 +113,7 @@ for iteration in range(10001):
     # backward
     loss_activation.backward(loss_activation.output, y) # sets dinputs to new distribution
     dense2.backward(loss_activation.dinputs) # sets dinputs from current weights and loss activation backward pass
-    activation1.backward(dense2.dinputs) # 
+    activation1.backward(dense2.dinputs)
     dense1.backward(activation1.dinputs)
     # gradient descent update
     optimizer.update_params(dense1)
