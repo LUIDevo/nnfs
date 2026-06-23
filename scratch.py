@@ -19,6 +19,15 @@ class Activation_Softmax:
        self.output=probabilities
 
 class Loss_CategoricalCrossentropy:
+    def forward(self, y_pred, y):
+        samples=len(y_pred)
+        y_pred_clipped=np.clip(y_pred, 1e-7, 1 - 1e-7) # clip to small value between (0, 1)
+        # take the correct prediction confidence for all rows
+        # return the negative log of the above values
+
+    def calculate(self, inputs, y):
+        sample_losses=self.forward(inputs, y)
+
 
 class Activation_Softmax_Loss:
     def __init__(self):
