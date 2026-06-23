@@ -12,9 +12,10 @@ class LayerDense:
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
 
-
+class SoftMax:
 
 # program setup
 X, y = vertical_data(samples=100, classes=3)
-dense1=
+dense1=LayerDense(2,3)
+
 # program loop
