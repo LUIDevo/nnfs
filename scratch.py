@@ -58,12 +58,8 @@ dense1=LayerDense(2,3)
 output=Activation_Softmax_Loss()
 
 # program loop
-dense1.forward(X)
-loss=output.forward(dense1.output, y)
-print(loss, dense1.weights)
-output.backward(output.output, y)
-# print("dinputs")
-# print(output.dinputs)
-dense1.backward(output.dinputs)
-print("weights")
-print(dense1.weights)
+for iteration in range(10001):
+    dense1.forward(X)
+    loss=output.forward(dense1.output, y)
+    output.backward(output.output, y)
+    dense1.backward(output.dinputs)
