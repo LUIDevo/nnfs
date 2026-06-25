@@ -12,9 +12,12 @@ class LayerDense:
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
     def backward(self, dvalues):
+        lr=0.01
         self.dweights=np.dot(self.inputs.T, dvalues)
         self.dbiases=np.sum(dvalues, axis=0, keepdims=True)
         self.dinputs=np.dot(dvalues, self.weights.T)
+        self.weights-=self.dweights*lr
+        self.biases-=self.dbiases*lr
 
 class Activation_Softmax:
     def forward(self, inputs):
@@ -59,6 +62,8 @@ dense1.forward(X)
 loss=output.forward(dense1.output, y)
 print(loss, dense1.weights)
 output.backward(output.output, y)
+# print("dinputs")
+# print(output.dinputs)
 dense1.backward(output.dinputs)
 print("weights")
 print(dense1.weights)
