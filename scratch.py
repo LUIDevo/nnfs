@@ -11,6 +11,10 @@ class LayerDense:
     def forward(self, inputs):
         self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases
+    def backward(self, dvalues):
+        self.dweights=np.dot(self.inputs.T, dvalues)
+        self.dbiases=np.sum(dvalues, axis=0, keepdims=True)
+        self.dinputs=np.dot(dvalues, self.weights.T)
 
 class Activation_Softmax:
     def forward(self, inputs):
@@ -37,8 +41,13 @@ class Activation_Softmax_Loss:
         self.loss=Loss_CategoricalCrossentropy()
     def forward(self, inputs,y_true):
         self.output=self.activation.forward(inputs)
-        self.loss.calculate(self.output, y_true)
-        return self.output
+        loss=self.loss.calculate(self.output, y_true)
+        return loss
+    def backward(self, dvalues, y_true):
+        samples=len(dvalues)
+        self.dinputs=dvalues.copy() 
+        self.dinputs[range(samples), y_true]-=1
+        self.dinputs=self.dinputs/samples
 
 # program setup
 X, y = vertical_data(samples=100, classes=3)
@@ -51,4 +60,5 @@ loss=output.forward(dense1.output, y)
 print(loss, dense1.weights)
 output.backward(output.output, y)
 dense1.backward(output.dinputs)
+print("weights")
 print(dense1.weights)
